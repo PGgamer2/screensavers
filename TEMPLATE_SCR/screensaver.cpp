@@ -1,0 +1,125 @@
+#include "init.h"
+
+bool running = true;
+bool hasParent = false;
+SDL_Window* window;
+SDL_Renderer* renderer;
+
+void onloop() {
+	int w, h, grayscale;
+	SDL_Rect rect;
+	rect.w = 5;
+	rect.h = 5;
+	SDL_GL_GetDrawableSize(window, &w, &h);
+	for (int x = 0; x <= w; x += 5) {
+		for (int y = 0; y <= h; y += 5) {
+			grayscale = (int)((float)rand() / (float)RAND_MAX * 255.F);
+			SDL_SetRenderDrawColor(renderer, grayscale, grayscale, grayscale, 255);
+			rect.x = x;
+			rect.y = y;
+			SDL_RenderFillRect(renderer, &rect);
+		}
+	}
+}
+
+void onevent(SDL_Event* Event) {
+	if (Event->type == SDL_QUIT) {
+		running = false;
+		return;
+	}
+
+	if (hasParent) return;
+	if (Event->type == SDL_KEYDOWN) {
+		running = false;
+		return;
+	}
+	if (Event->type == SDL_MOUSEMOTION) {
+		SDL_MouseMotionEvent* MouseEvent = (SDL_MouseMotionEvent*)Event;
+		if (MouseEvent->xrel > 2 || MouseEvent->yrel > 2) {
+			running = false;
+		}
+	}
+}
+
+int initScreenSaver(HWND* parent) {
+	// Get parent window rect
+	hasParent = *parent != NULL;
+	RECT parentRect;
+	if (hasParent) {
+		GetWindowRect(*parent, &parentRect);
+		int x = parentRect.left;
+		int y = parentRect.top;
+		GetClientRect(*parent, &parentRect);
+		parentRect.left = x;
+		parentRect.top = y;
+	} else {
+		GetWindowRect(GetDesktopWindow(), &parentRect);
+	}
+
+	// Initialize SDL
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+		cout << SDL_GetError();
+		return -1;
+	}
+	if (hasParent) {
+		window = SDL_CreateWindowFrom(*parent);
+		SDL_SetWindowBordered(window, SDL_FALSE);
+		SDL_ShowWindow(window);
+	} else {
+		window = SDL_CreateWindow("ScreenSaver", parentRect.left, parentRect.top, parentRect.right, parentRect.bottom,
+			SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_SKIP_TASKBAR | SDL_WINDOW_SHOWN);
+	}
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (window == NULL || renderer == NULL) {
+		cout << SDL_GetError();
+		return -1;
+	}
+	if (!hasParent) SDL_ShowCursor(SDL_DISABLE);
+
+	// Get monitor refresh rate
+	SDL_DisplayMode mode;
+	double monitorMilliCap = 16.6667;
+	if (SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(window), &mode) == 0) {
+		monitorMilliCap = 1000.0 / (double)mode.refresh_rate;
+	}
+
+	/* MAIN LOOP */
+	system_clock::time_point timeA = system_clock::now();
+	system_clock::time_point timeB = system_clock::now();
+	SDL_Event Event;
+	while (running) {
+		// Fix FPS at monitor's refresh rate
+		timeA = system_clock::now();
+		duration<double, milli> work_time = timeA - timeB;
+		if (work_time.count() < monitorMilliCap) {
+			duration<double, milli> delta_ms(monitorMilliCap - work_time.count());
+			milliseconds delta_ms_duration = duration_cast<milliseconds>(delta_ms);
+			this_thread::sleep_for(milliseconds(delta_ms_duration.count()));
+		}
+		timeB = system_clock::now();
+		duration<double, milli> sleep_time = timeB - timeA;
+
+		if (hasParent) {
+			if (GetWindowRect(*parent, &parentRect) == 0) running = false;
+			SDL_SetWindowPosition(window, parentRect.left, parentRect.top);
+			if (GetClientRect(*parent, &parentRect) == 0) running = false;
+			SDL_SetWindowSize(window, parentRect.right, parentRect.bottom);
+		}
+
+		// Rendering and other code
+		while (SDL_PollEvent(&Event)) {
+			onevent(&Event);
+		}
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderClear(renderer);
+		onloop();
+		SDL_RenderPresent(renderer);
+	}
+
+	// Free resources
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+	return 0;
+}
+
