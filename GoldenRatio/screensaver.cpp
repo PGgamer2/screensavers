@@ -5,6 +5,7 @@ bool hasParent = false;
 SDL_Window* window;
 SDL_Renderer* renderer;
 
+bool shouldRenderSquares;
 const float GOLDEN_RATIO_CONJUGATE = 0.618034F;
 
 void drawCircleSide(int xc, int yc, int x, int y, int side) {
@@ -73,7 +74,9 @@ void onloop() {
 				square.y = yc;
 				xc -= (int)(r - r * GOLDEN_RATIO_CONJUGATE);
 		}
-		SDL_RenderDrawRect(renderer, &square);
+		if (shouldRenderSquares) {
+			SDL_RenderDrawRect(renderer, &square);
+		}
 		r *= GOLDEN_RATIO_CONJUGATE;
 	}
 }
@@ -98,6 +101,12 @@ void onevent(SDL_Event* Event) {
 }
 
 int initScreenSaver(HWND* parent) {
+	// Check if we should render squares
+	DWORD value = 0;
+	if (RegGetDword(HKEY_CURRENT_USER, "Software\\GoldenRatio", "Squares", &value) == ERROR_SUCCESS) {
+		shouldRenderSquares = value != 0L;
+	}
+
 	// Get parent window rect
 	hasParent = *parent != NULL;
 	RECT parentRect;

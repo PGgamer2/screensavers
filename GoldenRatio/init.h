@@ -14,8 +14,10 @@ enum windowType {
 	ScreenSaver, SettingsDialog, PasswordDialog
 };
 
+// settings.cpp
+long RegGetDword(HKEY hKey, string subKey, string name, DWORD* valuePtr);
+long RegSetDword(HKEY hKey, string subKey, string name, DWORD value);
+int initSettings(windowType* type, HWND* parent);
+
 // screensaver.cpp
 int initScreenSaver(HWND* parent);
-
-// settings.cpp
-int initSettings(windowType* type, HWND* parent);
