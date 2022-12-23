@@ -84,20 +84,19 @@ int initScreenSaver(HWND* parent) {
 	}
 
 	/* MAIN LOOP */
-	system_clock::time_point timeA = system_clock::now();
-	system_clock::time_point timeB = system_clock::now();
+	system_clock::time_point currentFrame = system_clock::now();
+	system_clock::time_point lastFrame = system_clock::now();
 	SDL_Event Event;
 	while (running) {
 		// Fix FPS at monitor's refresh rate
-		timeA = system_clock::now();
-		duration<double, milli> work_time = timeA - timeB;
-		if (work_time.count() < monitorMilliCap) {
-			duration<double, milli> delta_ms(monitorMilliCap - work_time.count());
+		currentFrame = system_clock::now();
+		system_clock::duration deltaDuration = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		if (deltaDuration.count() < monitorMilliCap) {
+			duration<double, milli> delta_ms(monitorMilliCap - deltaDuration.count());
 			milliseconds delta_ms_duration = duration_cast<milliseconds>(delta_ms);
 			this_thread::sleep_for(milliseconds(delta_ms_duration.count()));
 		}
-		timeB = system_clock::now();
-		duration<double, milli> sleep_time = timeB - timeA;
 
 		if (hasParent) {
 			if (GetWindowRect(*parent, &parentRect) == 0) running = false;
