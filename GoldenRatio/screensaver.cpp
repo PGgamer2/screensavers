@@ -6,23 +6,25 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 
 bool shouldRenderSquares;
+float zoomFactor = 1.0F;
 const float GOLDEN_RATIO_CONJUGATE = 0.618034F;
+constexpr float ZOOM_END = 1.618034F * 1.618034F * 1.618034F * 1.618034F;
 
 void drawCircleSide(int xc, int yc, int x, int y, int side) {
 	switch (side % 4) {
-		case 3:
+		case 0:
 			SDL_RenderDrawPoint(renderer, xc - x, yc + y);
 			SDL_RenderDrawPoint(renderer, xc - y, yc + x);
 			break;
-		case 2:
+		case 1:
 			SDL_RenderDrawPoint(renderer, xc + y, yc + x);
 			SDL_RenderDrawPoint(renderer, xc + x, yc + y);
 			break;
-		case 1:
+		case 2:
 			SDL_RenderDrawPoint(renderer, xc + y, yc - x);
 			SDL_RenderDrawPoint(renderer, xc + x, yc - y);
 			break;
-		case 0:
+		case 3:
 			SDL_RenderDrawPoint(renderer, xc - x, yc - y);
 			SDL_RenderDrawPoint(renderer, xc - y, yc - x);
 	}
@@ -35,12 +37,13 @@ void onloop() {
 	SDL_GL_GetDrawableSize(window, &screenW, &screenH);
 	int iterations = (int)(16.F * (float)max(screenW, screenH) / 1280.F);
 
-	float r = (float)screenH;
-	int xc = (screenW - (int)((float)screenH * (1.F + GOLDEN_RATIO_CONJUGATE))) / 2 + screenH;
-	int yc = screenH;
+	float r = zoomFactor;
+	int xc = screenW / 2;
+	int yc = screenH / 2;
 	int x, y, d;
 	SDL_Rect square;
 	for (int i = 0; i < iterations; i++) {
+		square.w = (int)ceil(r); square.h = (int)ceil(r);
 		x = 0, y = (int)r, d = 3 - (int)(2.F * r);
 		drawCircleSide(xc, yc, x, y, i);
 		while (y >= x) {
@@ -51,33 +54,31 @@ void onloop() {
 			} else d = d + 4 * x + 6;
 			drawCircleSide(xc, yc, x, y, i);
 		}
-
-		square.w = (int)ceil(r); square.h = (int)ceil(r);
 		switch (i % 4) {
 			case 0:
 				square.x = xc - (int)r;
-				square.y = yc - (int)r;
-				yc -= (int)(r - r * GOLDEN_RATIO_CONJUGATE);
+				square.y = yc;
+				yc -= (int)(r * GOLDEN_RATIO_CONJUGATE);
 				break;
 			case 1:
 				square.x = xc;
-				square.y = yc - (int)r;
-				xc += (int)(r - r * GOLDEN_RATIO_CONJUGATE);
+				square.y = yc;
+				xc -= (int)(r * GOLDEN_RATIO_CONJUGATE);
 				break;
 			case 2:
 				square.x = xc;
-				square.y = yc;
-				yc += (int)(r - r * GOLDEN_RATIO_CONJUGATE);
+				square.y = yc - (int)r;
+				yc += (int)(r * GOLDEN_RATIO_CONJUGATE);
 				break;
 			case 3:
 				square.x = xc - (int)r;
-				square.y = yc;
-				xc -= (int)(r - r * GOLDEN_RATIO_CONJUGATE);
+				square.y = yc - (int)r;
+				xc += (int)(r * GOLDEN_RATIO_CONJUGATE);
 		}
 		if (shouldRenderSquares) {
 			SDL_RenderDrawRect(renderer, &square);
 		}
-		r *= GOLDEN_RATIO_CONJUGATE;
+		r *= 1.F + GOLDEN_RATIO_CONJUGATE;
 	}
 }
 
@@ -149,20 +150,24 @@ int initScreenSaver(HWND* parent) {
 	}
 
 	/* MAIN LOOP */
-	system_clock::time_point timeA = system_clock::now();
-	system_clock::time_point timeB = system_clock::now();
+	system_clock::time_point currentFrame = system_clock::now();
+	system_clock::time_point lastFrame = system_clock::now();
 	SDL_Event Event;
 	while (running) {
 		// Fix FPS at monitor's refresh rate
-		timeA = system_clock::now();
-		duration<double, milli> work_time = timeA - timeB;
-		if (work_time.count() < monitorMilliCap) {
-			duration<double, milli> delta_ms(monitorMilliCap - work_time.count());
+		currentFrame = system_clock::now();
+		system_clock::duration deltaDuration = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		if (deltaDuration.count() < monitorMilliCap) {
+			duration<double, milli> delta_ms(monitorMilliCap - deltaDuration.count());
 			milliseconds delta_ms_duration = duration_cast<milliseconds>(delta_ms);
 			this_thread::sleep_for(milliseconds(delta_ms_duration.count()));
 		}
-		timeB = system_clock::now();
-		duration<double, milli> sleep_time = timeB - timeA;
+
+		zoomFactor += zoomFactor * ((float)duration_cast<milliseconds>(deltaDuration).count() / 1000.F);
+		if (zoomFactor > ZOOM_END) {
+			zoomFactor -= ZOOM_END - 1.F;
+		}
 
 		if (hasParent) {
 			if (GetWindowRect(*parent, &parentRect) == 0) running = false;
