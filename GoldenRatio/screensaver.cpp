@@ -166,7 +166,7 @@ int initScreenSaver(HWND* parent) {
 
 		zoomFactor += zoomFactor * ((float)duration_cast<milliseconds>(deltaDuration).count() / 1000.F);
 		if (zoomFactor > ZOOM_END) {
-			zoomFactor -= ZOOM_END - 1.F;
+			zoomFactor = 1.F + (zoomFactor - ZOOM_END) * ((float)duration_cast<milliseconds>(deltaDuration).count() / 1000.F);
 		}
 
 		if (hasParent) {
