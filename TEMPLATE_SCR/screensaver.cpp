@@ -1,4 +1,4 @@
-#include "init.h"
+#include "main.h"
 
 bool running = true;
 bool hasParent = false;
@@ -44,16 +44,11 @@ void onevent(SDL_Event* Event) {
 int initScreenSaver(HWND* parent) {
 	// Get parent window rect
 	hasParent = *parent != NULL;
-	RECT parentRect;
+	SDL_Rect parentRect;
 	if (hasParent) {
-		GetWindowRect(*parent, &parentRect);
-		int x = parentRect.left;
-		int y = parentRect.top;
-		GetClientRect(*parent, &parentRect);
-		parentRect.left = x;
-		parentRect.top = y;
+		getWindowSize(*parent, &parentRect);
 	} else {
-		GetWindowRect(GetDesktopWindow(), &parentRect);
+		getDesktopSize(&parentRect);
 	}
 
 	// Initialize SDL
@@ -66,7 +61,7 @@ int initScreenSaver(HWND* parent) {
 		SDL_SetWindowBordered(window, SDL_FALSE);
 		SDL_ShowWindow(window);
 	} else {
-		window = SDL_CreateWindow("ScreenSaver", parentRect.left, parentRect.top, parentRect.right, parentRect.bottom,
+		window = SDL_CreateWindow("ScreenSaver", parentRect.x, parentRect.y, parentRect.w, parentRect.h,
 			SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_SKIP_TASKBAR | SDL_WINDOW_SHOWN);
 	}
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -99,10 +94,9 @@ int initScreenSaver(HWND* parent) {
 		}
 
 		if (hasParent) {
-			if (GetWindowRect(*parent, &parentRect) == 0) running = false;
-			SDL_SetWindowPosition(window, parentRect.left, parentRect.top);
-			if (GetClientRect(*parent, &parentRect) == 0) running = false;
-			SDL_SetWindowSize(window, parentRect.right, parentRect.bottom);
+			if (getWindowSize(*parent, &parentRect) == 0) running = false;
+			SDL_SetWindowPosition(window, parentRect.x, parentRect.y);
+			SDL_SetWindowSize(window, parentRect.w, parentRect.h);
 		}
 
 		// Rendering and other code

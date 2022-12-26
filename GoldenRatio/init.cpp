@@ -1,7 +1,6 @@
-﻿#include "init.h"
+﻿#include "main.h"
 
-int main(int argc, char* args[])
-{
+int main(int argc, char* args[]) {
 	HWND parent = NULL;
 	windowType mode = ScreenSaver;
 	bool waitingForHandle = false;
@@ -14,7 +13,7 @@ int main(int argc, char* args[])
 			switch (args[i][1]) {
 				case 'c': // Show the Settings dialog box, modal to the foreground window
 					mode = SettingsDialog;
-					parent = GetForegroundWindow();
+					parent = getForegroundWin();
 					break;
 				case 'p': // Preview Screen Saver as child of window <HWND>
 					mode = ScreenSaver;
