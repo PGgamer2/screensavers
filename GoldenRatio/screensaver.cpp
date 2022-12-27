@@ -8,6 +8,7 @@ SDL_Renderer* renderer;
 bool shouldRenderSquares;
 float zoomFactor = 1.0F;
 const float GOLDEN_RATIO_CONJUGATE = 0.618034F;
+const float GOLDEN_RATIO_LOG = log(1.618034F);
 constexpr float ZOOM_END = 1.618034F * 1.618034F * 1.618034F * 1.618034F;
 
 void drawCircleSide(int xc, int yc, int x, int y, int side) {
@@ -35,7 +36,7 @@ void onloop() {
 
 	int screenW, screenH;
 	SDL_GL_GetDrawableSize(window, &screenW, &screenH);
-	int iterations = (int)(16.F * (float)max(screenW, screenH) / 1280.F);
+	int iterations = (int)ceil(log((float)max(screenW, screenH)) / GOLDEN_RATIO_LOG);
 
 	float r = zoomFactor;
 	int xc = screenW / 2;
