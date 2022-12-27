@@ -35,26 +35,6 @@ int getWindowSize(HWND handle, SDL_Rect* rect) {
 	return success;
 }
 
-int getDesktopSize(SDL_Rect* rect) {
-	int success = 1;
-	rect->x = 0;
-	rect->y = 0;
-#ifdef _WIN32
-	RECT winRect;
-	success = GetWindowRect(GetDesktopWindow(), &winRect);
-	rect->w = winRect.right;
-	rect->h = winRect.bottom;
-#elif defined(__linux__)
-	struct fb_var_screeninfo fb_var;
-	int fd = open("/dev/graphics/fb0", O_RDONLY);
-	ioctl(fd, FBIOGET_VSCREENINFO, &fb_var);
-	close(fd);
-	rect->w = fb_var.xres;
-	rect->h = fb_var.yres;
-#endif
-	return success;
-}
-
 HWND getForegroundWin() {
 	HWND win = NULL;
 #ifdef _WIN32

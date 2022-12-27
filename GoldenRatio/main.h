@@ -8,13 +8,6 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#ifdef __linux__
-#include <sys/ioctl.h>
-#include <linux/fb.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#endif
 typedef void* HWND;
 #endif
 
@@ -31,7 +24,6 @@ enum windowType {
 unsigned long getSetting(string subKey, string name, unsigned long* valuePtr);
 unsigned long setSetting(string subKey, string name, unsigned long value);
 int getWindowSize(HWND handle, SDL_Rect* rect);
-int getDesktopSize(SDL_Rect* rect);
 HWND getForegroundWin();
 
 // settings.cpp

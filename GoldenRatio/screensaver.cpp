@@ -114,7 +114,12 @@ int initScreenSaver(HWND* parent) {
 	if (hasParent) {
 		getWindowSize(*parent, &parentRect);
 	} else {
-		getDesktopSize(&parentRect);
+		SDL_DisplayMode mode;
+		SDL_GetCurrentDisplayMode(0, &mode);
+		parentRect.x = 0;
+		parentRect.y = 0;
+		parentRect.w = mode.w;
+		parentRect.h = mode.h;
 	}
 
 	// Initialize SDL
