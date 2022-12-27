@@ -108,6 +108,12 @@ int initScreenSaver(HWND* parent) {
 		shouldRenderSquares = value != 0UL;
 	}
 
+	// Initialize SDL
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+		cout << SDL_GetError();
+		return -1;
+	}
+
 	// Get parent window rect
 	hasParent = *parent != NULL;
 	SDL_Rect parentRect;
@@ -122,11 +128,7 @@ int initScreenSaver(HWND* parent) {
 		parentRect.h = mode.h;
 	}
 
-	// Initialize SDL
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-		cout << SDL_GetError();
-		return -1;
-	}
+	// Create window
 	if (hasParent) {
 		window = SDL_CreateWindowFrom(*parent);
 		SDL_SetWindowBordered(window, SDL_FALSE);
@@ -134,13 +136,19 @@ int initScreenSaver(HWND* parent) {
 	} else {
 		window = SDL_CreateWindow("ScreenSaver", parentRect.x, parentRect.y, parentRect.w, parentRect.h,
 			SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_SKIP_TASKBAR | SDL_WINDOW_SHOWN);
+		SDL_ShowCursor(SDL_DISABLE);
 	}
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	if (window == NULL || renderer == NULL) {
+	if (window == NULL) {
 		cout << SDL_GetError();
 		return -1;
 	}
-	if (!hasParent) SDL_ShowCursor(SDL_DISABLE);
+
+	// Create renderer
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (renderer == NULL) {
+		cout << SDL_GetError();
+		return -1;
+	}
 
 	// Get monitor refresh rate
 	SDL_DisplayMode mode;
