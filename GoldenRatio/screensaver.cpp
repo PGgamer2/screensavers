@@ -35,7 +35,7 @@ void onloop() {
 	SDL_SetRenderDrawColor(renderer, 255, 215, 0, 255);
 
 	int screenW, screenH;
-	SDL_GL_GetDrawableSize(window, &screenW, &screenH);
+	SDL_GetWindowSizeInPixels(window, &screenW, &screenH);
 	int iterations = (int)ceil(log((float)max(screenW, screenH)) / GOLDEN_RATIO_LOG);
 
 	float r = zoomFactor;
