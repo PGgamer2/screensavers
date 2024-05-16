@@ -6,10 +6,10 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 
 bool shouldRenderSquares;
-float zoomFactor = 1.0F;
-const float GOLDEN_RATIO_CONJUGATE = 0.618034F;
 const float GOLDEN_RATIO_LOG = log(1.618034F);
-constexpr float ZOOM_END = 1.618034F * 1.618034F * 1.618034F * 1.618034F;
+const float GOLDEN_RATIO_CONJUGATE = 0.618034F;
+const float ZOOM_START = 1.0F / (1.618034F * 1.618034F * 1.618034F * 1.618034F);
+float zoomFactor = ZOOM_START;
 
 void drawCircleSide(int xc, int yc, int x, int y, int side) {
 	switch (side % 4) {
@@ -35,8 +35,8 @@ void onloop() {
 	SDL_SetRenderDrawColor(renderer, 255, 215, 0, 255);
 
 	int screenW, screenH;
-	SDL_GetWindowSizeInPixels(window, &screenW, &screenH);
-	int iterations = (int)ceil(log((float)max(screenW, screenH)) / GOLDEN_RATIO_LOG);
+	SDL_GetRendererOutputSize(renderer, &screenW, &screenH);
+	int iterations = (int)ceil(log((float)max(screenW, screenH) / zoomFactor) / GOLDEN_RATIO_LOG);
 
 	float r = zoomFactor;
 	int xc = screenW / 2;
@@ -46,14 +46,13 @@ void onloop() {
 	for (int i = 0; i < iterations; i++) {
 		square.w = (int)ceil(r); square.h = (int)ceil(r);
 		x = 0, y = (int)r, d = 3 - (int)(2.F * r);
-		drawCircleSide(xc, yc, x, y, i);
-		while (y >= x) {
+		while (y + 1 >= x) {
+			drawCircleSide(xc, yc, x, y, i);
 			x++;
 			if (d > 0) {
 				y--;
 				d = d + 4 * (x - y) + 10;
 			} else d = d + 4 * x + 6;
-			drawCircleSide(xc, yc, x, y, i);
 		}
 		switch (i % 4) {
 			case 0:
@@ -174,8 +173,8 @@ int initScreenSaver(HWND* parent) {
 		}
 
 		zoomFactor += zoomFactor * ((float)duration_cast<milliseconds>(deltaDuration).count() / 1000.F);
-		if (zoomFactor > ZOOM_END) {
-			zoomFactor = 1.F + (zoomFactor - ZOOM_END) * ((float)duration_cast<milliseconds>(deltaDuration).count() / 1000.F);
+		if (zoomFactor > 1.0F) {
+			zoomFactor = ZOOM_START + (zoomFactor - 1.0F) * ((float)duration_cast<milliseconds>(deltaDuration).count() / 1000.F);
 		}
 
 		if (hasParent) {
