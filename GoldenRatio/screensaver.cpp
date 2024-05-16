@@ -36,7 +36,7 @@ void onloop() {
 
 	int screenW, screenH;
 	SDL_GetRendererOutputSize(renderer, &screenW, &screenH);
-	int iterations = (int)ceil(log((float)max(screenW, screenH) / zoomFactor) / GOLDEN_RATIO_LOG);
+	int iterations = (int)ceil(log((float)max(screenW, screenH) / (shouldRenderSquares ? ZOOM_START : zoomFactor)) / GOLDEN_RATIO_LOG);
 
 	float r = zoomFactor;
 	int xc = screenW / 2;
