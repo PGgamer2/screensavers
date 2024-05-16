@@ -10,7 +10,7 @@ void onloop() {
 	SDL_Rect rect;
 	rect.w = 5;
 	rect.h = 5;
-	SDL_GetWindowSizeInPixels(window, &w, &h);
+	SDL_GetRendererOutputSize(renderer, &w, &h);
 	for (int x = 0; x <= w; x += 5) {
 		for (int y = 0; y <= h; y += 5) {
 			grayscale = (int)((float)rand() / (float)RAND_MAX * 255.F);
