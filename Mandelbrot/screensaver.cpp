@@ -24,23 +24,23 @@ void renderPart(uint8_t* t_buff, int initPos, ld t_zoomPointR, ld t_zoomPointI, 
 		real = ((ld)((p / 4) % t_screenW) - ((ld)t_screenW / 2.0L)) / (zoomBase * t_zoomFactor) + t_zoomPointR;
 		imag = ((ld)((p / 4) / t_screenW) - ((ld)t_screenH / 2.0L)) / (zoomBase * t_zoomFactor) + t_zoomPointI;
 		zReal = real; zImag = imag;
-		if ((pow(real - .25, 2) + pow(imag, 2)) * (pow(real, 2) + (real / 2) + pow(imag, 2) - .1875) < pow(imag, 2) / 4 ||
-			pow(real + 1, 2) + pow(imag, 2) < .0625) {
+		if ((pow(real - .25L, 2.0L) + pow(imag, 2.0L)) * (pow(real, 2.0L) + (real / 2.0L) + pow(imag, 2.0L) - .1875L) < pow(imag, 2.0L) / 4.0L ||
+			pow(real + 1.0L, 2.0L) + pow(imag, 2.0L) < .0625L) {
 			i = iterations;
 		} else {
-			r2 = 0.F, i2 = 0.F;
+			r2 = 0.0L, i2 = 0.0L;
 			for (i = 0; i < iterations; ++i) {
 				r2 = zReal * zReal;
 				i2 = zImag * zImag;
-				if (r2 + i2 > 4.F) break;
-				zImag = 2.F * zReal * zImag + imag;
+				if (r2 + i2 > 4.0L) break;
+				zImag = 2.0L * zReal * zImag + imag;
 				zReal = r2 - i2 + real;
 			}
 		}
 
 		// Iterations to RGB
 		r = 0, g = 0, b = 0;
-		hue = (1.0F - (float)i / iterations) * 0.7F;
+		hue = (1.0F - (float)i / (float)iterations) * 0.7F;
 		h = (hue - (float)((int)hue)) * 6.0f;
 		switch ((int)h) {
 		case 0:
