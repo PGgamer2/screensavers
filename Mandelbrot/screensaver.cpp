@@ -14,15 +14,15 @@ SDL_Texture* texBuf;
 uint8_t* pixelBuf = nullptr;
 
 void renderPart(uint8_t* t_buff, int initPos, ld t_zoomPointR, ld t_zoomPointI, ld t_zoomFactor, int t_screenW, int t_screenH) {
-	ld zoomBase = min(t_screenH, t_screenW) / 2.F;
-	int iterations = 50 + pow(log10(4.0L / ((ld)t_screenW / (zoomBase * t_zoomFactor))), 5.0L);
+	ld zDen = t_zoomFactor * min(t_screenH, t_screenW) / 2.0L;
+	int iterations = 50 + pow(log10(4.0L / ((ld)t_screenW / zDen)), 5.0L);
 	int r, g, b, i;
 	float hue, h;
 	ld real, imag, zReal, zImag, r2, i2;
 	for (int p = t_screenW * t_screenH * initPos; p < t_screenW * t_screenH * (initPos + 1); p += 4) {
 		// MANDELBROT
-		real = ((ld)((p / 4) % t_screenW) - ((ld)t_screenW / 2.0L)) / (zoomBase * t_zoomFactor) + t_zoomPointR;
-		imag = ((ld)((p / 4) / t_screenW) - ((ld)t_screenH / 2.0L)) / (zoomBase * t_zoomFactor) + t_zoomPointI;
+		real = ((ld)((p / 4) % t_screenW) - ((ld)t_screenW / 2.0L)) / zDen + t_zoomPointR;
+		imag = ((ld)((p / 4) / t_screenW) - ((ld)t_screenH / 2.0L)) / zDen + t_zoomPointI;
 		zReal = real; zImag = imag;
 		if ((pow(real - .25L, 2.0L) + pow(imag, 2.0L)) * (pow(real, 2.0L) + (real / 2.0L) + pow(imag, 2.0L) - .1875L) < pow(imag, 2.0L) / 4.0L ||
 			pow(real + 1.0L, 2.0L) + pow(imag, 2.0L) < .0625L) {
@@ -120,6 +120,11 @@ void onevent(SDL_Event* Event) {
 }
 
 int initScreenSaver(HWND* parent) {
+	unsigned long ZOOM_END = 2000UL;
+	if (getSetting("Software\\MandelbrotScr", "ZoomEnd", &ZOOM_END) != 0UL) {
+		ZOOM_END = 2000UL;
+	}
+
 	// Initialize SDL
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		cout << SDL_GetError();
@@ -156,7 +161,7 @@ int initScreenSaver(HWND* parent) {
 	}
 
 	// Create renderer
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
 		cout << SDL_GetError();
 		return -1;
@@ -199,7 +204,8 @@ int initScreenSaver(HWND* parent) {
 		}
 		// Zoom
 		zoomFactor += zoomFactor * ((ld)duration_cast<milliseconds>(deltaDuration).count() / 100000.0L);
-		
+		if (zoomFactor > ZOOM_END) zoomFactor = ZOOM_END;
+
 		if (hasParent) {
 			if (getWindowSize(*parent, &parentRect) == 0) running = false;
 			SDL_SetWindowPosition(window, parentRect.x, parentRect.y);
