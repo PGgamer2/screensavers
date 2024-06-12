@@ -7,6 +7,7 @@ SDL_Renderer* renderer;
 
 typedef long double ld; // extra precision
 
+const float LOG2_CONJ = 1.F / logf(2.F);
 ld zoomPointR = -0.10109636384562L;
 ld zoomPointI = 0.95628651080914L;
 ld zoomFactor = 1.0L;
@@ -15,7 +16,7 @@ uint8_t* pixelBuf = nullptr;
 
 void renderPart(uint8_t* t_buff, int initPos, ld t_zoomPointR, ld t_zoomPointI, ld t_zoomFactor, int t_screenW, int t_screenH) {
 	ld zDen = t_zoomFactor * min(t_screenH, t_screenW) / 2.0L;
-	int iterations = 50 + pow(log10(4.0L / ((ld)t_screenW / zDen)), 5.0L);
+	int maxiter = 50 + pow(log10l(4.0L / ((ld)t_screenW / zDen)), 5.0L);
 	int r, g, b, i;
 	float hue, h;
 	ld real, imag, zReal, zImag, r2, i2;
@@ -24,12 +25,12 @@ void renderPart(uint8_t* t_buff, int initPos, ld t_zoomPointR, ld t_zoomPointI, 
 		real = ((ld)((p / 4) % t_screenW) - ((ld)t_screenW / 2.0L)) / zDen + t_zoomPointR;
 		imag = ((ld)((p / 4) / t_screenW) - ((ld)t_screenH / 2.0L)) / zDen + t_zoomPointI;
 		zReal = real; zImag = imag;
-		if ((pow(real - .25L, 2.0L) + pow(imag, 2.0L)) * (pow(real, 2.0L) + (real / 2.0L) + pow(imag, 2.0L) - .1875L) < pow(imag, 2.0L) / 4.0L ||
-			pow(real + 1.0L, 2.0L) + pow(imag, 2.0L) < .0625L) {
-			i = iterations;
+		if (((real - .25L) * (real - .25L) + imag * imag) * (real * real + (real / 2.0L) + imag * imag - .1875L) < imag * imag / 4.0L ||
+			(real + 1.0L) * (real + 1.0L) + imag * imag < .0625L) {
+			i = maxiter;
 		} else {
 			r2 = 0.0L, i2 = 0.0L;
-			for (i = 0; i < iterations; ++i) {
+			for (i = 0; i < maxiter; ++i) {
 				r2 = zReal * zReal;
 				i2 = zImag * zImag;
 				if (r2 + i2 > 4.0L) break;
@@ -40,7 +41,7 @@ void renderPart(uint8_t* t_buff, int initPos, ld t_zoomPointR, ld t_zoomPointI, 
 
 		// Iterations to RGB
 		r = 0, g = 0, b = 0;
-		hue = (1.0F - (float)i / (float)iterations) * 0.7F;
+		hue = (1.0F - (float)i / (float)maxiter) * 0.7F;
 		h = (hue - (float)((int)hue)) * 6.0f;
 		switch ((int)h) {
 		case 0:
