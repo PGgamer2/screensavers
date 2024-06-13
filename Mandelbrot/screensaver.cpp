@@ -7,7 +7,6 @@ SDL_Renderer* renderer;
 
 typedef long double ld; // extra precision
 
-const float LOG2_CONJ = 1.F / logf(2.F);
 ld zoomPointR = -0.10109636384562L;
 ld zoomPointI = 0.95628651080914L;
 ld zoomFactor = 1.0L;
